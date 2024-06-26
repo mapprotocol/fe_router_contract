@@ -62,16 +62,6 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
         emit UpdateKeepers(_keeper,_flag);
     }
 
-    struct ButterBridgeData {
-        bytes32 transferId;
-        address initiator;
-        address srcToken;
-        uint256 amount;
-        bytes  swapData;
-        bytes  bridgeData;
-        bytes  feeData;
-    }
-    
     function deliverAndSwap(
         bytes32 orderId,
         address initiator,

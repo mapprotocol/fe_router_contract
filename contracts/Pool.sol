@@ -14,18 +14,17 @@ contract Pool is UUPSUpgradeable,Ownable2StepUpgradeable{
     
     address public router;
     mapping(address => bool) public supportTokens;
-    IERC20Upgradeable public wBTC;
 
     event SetRouter(address _router);
     event UpdateSupportToken(address _token,bool _flag);
-    event Withdraw(address _receiver,uint256 _amount);
+    event Withdraw(IERC20Upgradeable _token,address _receiver,uint256 _amount);
 
     error ONLY_ROUTER(address _caller);
     error NOT_CONTRACT(address _contract);
     error NOT_SUPPORT(address _token);
     error ZERO_ADDRESS();
 
-    modifier onlyRputer {
+    modifier onlyRouter {
         if(msg.sender != router) revert ONLY_ROUTER(msg.sender);
         _;
     }
@@ -56,15 +55,14 @@ contract Pool is UUPSUpgradeable,Ownable2StepUpgradeable{
        
     }
 
-
-    function withdraw(address _recerver,uint256 _amount) external onlyOwner {
+    function withdraw(IERC20Upgradeable _token,address _recerver,uint256 _amount) external onlyOwner {
          if(_recerver == address(0)) revert ZERO_ADDRESS();
-         wBTC.safeTransfer(_recerver,_amount); 
-         emit Withdraw(_recerver,_amount);
+         _token.safeTransfer(_recerver,_amount); 
+         emit Withdraw(_token,_recerver,_amount);
     }
 
 
-    function transferTo(IERC20Upgradeable _token,address receiver,uint256 _amount) external onlyRputer {
+    function transferTo(IERC20Upgradeable _token,address receiver,uint256 _amount) external onlyRouter {
         if(!supportTokens[address(_token)])revert NOT_SUPPORT(address(_token));
         if(receiver == address(0)) revert ZERO_ADDRESS();
         _token.safeTransfer(receiver,_amount); 
