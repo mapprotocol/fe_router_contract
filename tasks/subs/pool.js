@@ -13,11 +13,13 @@ task("pool:deploy", "pool deploy")
             log: true,
             contract: "Pool",
         });
-        impl_addr = impl.address;
+        let impl_addr = impl.address;
         let Pool = await ethers.getContractFactory("Pool");
         let data = await Pool.interface.encodeFunctionData("initialize", [deployer.address]);
+        let param = ethers.AbiCoder.defaultAbiCoder().encode(["address","bytes"], [impl_addr,data]);
         let proxy_salt = process.env.POOL_PROXY_SALT;
-        let proxy = await createFactory(hre, deployer, "FeProxy", ["address", "bytes"], [implAddr, data], proxy_salt);
+        let FeProxy = await ethers.getContractFactory("FeProxy");
+        let proxy = await createFactory(proxy_salt, FeProxy.bytecode,param);
         const verifyArgs = [impl_addr,data].map((arg) => (typeof arg == "string" ? `'${arg}'` : arg)).join(" ");
         console.log(`To verify proxy, run: npx hardhat verify --network Network --contract contracts/FeProxy.sol:FeProxy ${proxy.address} ${verifyArgs}`);
         console.log(`To verify impl, run: npx hardhat verify --network Network --contract contracts/Pool.sol:Pool ${impl_addr}`);
@@ -70,8 +72,10 @@ task("pool:updateSupportToken", "update support token")
         const deployer = accounts[0];
         console.log("deployer:", deployer.address);
         let pool = await ethers.getContractAt("Pool",taskArgs.pool,deployer);
+        console.log(pool)
         let tokenList = taskArgs.token.split(",");
-        await (await pool.updateSupportToken(tokenList,taskArgs.flag)).wait();
+        await (await pool.updateSupportTokens(tokenList,taskArgs.flag)).wait();
+        
     });
 
 task("pool:withdraw", "withdraw token")

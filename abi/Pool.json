@@ -154,7 +154,7 @@
         "type": "bool"
       }
     ],
-    "name": "UpdateSupportToken",
+    "name": "UpdateSupportTokens",
     "type": "event"
   },
   {
@@ -173,6 +173,12 @@
   {
     "anonymous": false,
     "inputs": [
+      {
+        "indexed": false,
+        "internalType": "contract IERC20Upgradeable",
+        "name": "_token",
+        "type": "address"
+      },
       {
         "indexed": false,
         "internalType": "address",
@@ -381,7 +387,7 @@
         "type": "bool"
       }
     ],
-    "name": "updateSupportToken",
+    "name": "updateSupportTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -418,20 +424,12 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "wBTC",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "contract IERC20Upgradeable",
-        "name": "",
+        "name": "_token",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
         "name": "_recerver",

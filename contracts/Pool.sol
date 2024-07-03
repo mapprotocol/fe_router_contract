@@ -16,7 +16,7 @@ contract Pool is UUPSUpgradeable,Ownable2StepUpgradeable{
     mapping(address => bool) public supportTokens;
 
     event SetRouter(address _router);
-    event UpdateSupportToken(address _token,bool _flag);
+    event UpdateSupportTokens(address _token,bool _flag);
     event Withdraw(IERC20Upgradeable _token,address _receiver,uint256 _amount);
 
     error ONLY_ROUTER(address _caller);
@@ -29,6 +29,7 @@ contract Pool is UUPSUpgradeable,Ownable2StepUpgradeable{
         _;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
          _disableInitializers(); 
     }
@@ -45,12 +46,12 @@ contract Pool is UUPSUpgradeable,Ownable2StepUpgradeable{
         emit SetRouter(_router);
     }
 
-    function updateSupportToken(address[] calldata _tokens,bool _flag) external onlyOwner {
+    function updateSupportTokens(address[] calldata _tokens,bool _flag) external onlyOwner {
         uint256 len = _tokens.length;
         for (uint i = 0; i < len; i++) {
              if(!_tokens[i].isContract()) revert NOT_CONTRACT(_tokens[i]);
              supportTokens[_tokens[i]] = _flag;
-             emit UpdateSupportToken(_tokens[i],_flag);
+             emit UpdateSupportTokens(_tokens[i],_flag);
         }
        
     }

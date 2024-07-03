@@ -35,6 +35,13 @@ const config: HardhatUserConfig = {
       url:"https://testnet-rpc.maplabs.io",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    Matic: {
+      url: `https://polygon-bor-rpc.publicnode.com`,
+      chainId: 137,
+      zksync: false,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
   },
 
   abiExporter: {
@@ -50,15 +57,15 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      bttc:"49V6QCE7UIBPPINR3XA8WUHP17MB14FTBX"
+      Matic:"",
     },
     customChains: [
       {
-        network: "bttc",
-        chainId: 199,
+        network: "Matic",
+        chainId: 137,
         urls: {
-          apiURL: "https://api.bttcscan.com/api",
-          browserURL: "https://bttcscan.com/"
+          apiURL: "https://api.polygonscan.com/api",
+          browserURL: "https://polygonscan.com/",
         },
       },
     ]

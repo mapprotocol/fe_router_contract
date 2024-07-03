@@ -33,7 +33,8 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
     error NOT_SUPPORT(address _token);
     error KEEPER_ONLY();
     error ALREADY_DELIVERED();
-
+    
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
          _disableInitializers(); 
     }

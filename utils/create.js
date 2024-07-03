@@ -12,14 +12,13 @@ async function createFactory(salt, bytecode, param) {
     let [wallet] = await ethers.getSigners();
     let factory = await ethers.getContractAt(IDeployFactory_abi, DEPLOY_FACTORY, wallet);
     let salt_hash = await ethers.keccak256(await ethers.toUtf8Bytes(salt));
-    // console.log("deploy factory address:", factory.address);
     console.log("deploy salt:", salt);
-    let addr = await factory.getAddress(salt_hash);
+    let addr = await factory["getAddress(bytes32)"](salt_hash);
     console.log("deployed to :", addr);
     let code = await ethers.provider.getCode(addr);
     let redeploy = false;
     if (code === "0x") {
-        let create_code = ethers.solidityPack(["bytes", "bytes"], [bytecode, param]);
+        let create_code = ethers.solidityPacked(["bytes", "bytes"], [bytecode, param]);
         let create = await (await factory.deploy(salt_hash, create_code, 0)).wait();
         if (create.status == 1) {
             redeploy = true;
