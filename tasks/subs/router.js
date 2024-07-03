@@ -20,8 +20,8 @@ task("router:deploy", "router deploy")
         let FeProxy = await ethers.getContractFactory("FeProxy");
         let proxy = await createFactory(proxy_salt,FeProxy.bytecode,param);
         const verifyArgs = [impl_addr,data].map((arg) => (typeof arg == "string" ? `'${arg}'` : arg)).join(" ");
-        console.log(`To verify proxy, run: npx hardhat verify --network Network --contract contracts/FeProxy.sol:FeProxy ${proxy.address} ${verifyArgs}`);
-        console.log(`To verify impl, run: npx hardhat verify --network Network --contract contracts/Router.sol:Router ${impl_addr}`);
+        console.log(`To verify proxy, run: npx hardhat verify --network ${hre.network.name} --contract contracts/FeProxy.sol:FeProxy ${proxy[0]} ${verifyArgs}`);
+        console.log(`To verify impl, run: npx hardhat verify --network ${hre.network.name} --contract contracts/Router.sol:Router ${impl_addr}`);
     });
 
 task("router:upgradeTo", "upgradeTo")
@@ -37,14 +37,14 @@ task("router:upgradeTo", "upgradeTo")
         if(taskArgs.impl){
             impl_addr = taskArgs.impl;
         } else {
-            let impl = await deploy("Pool", {
+            let impl = await deploy("Router", {
                 from: deployer.address,
                 args: [],
                 log: true,
-                contract: "Pool",
+                contract: "Router",
             });
             impl_addr = impl.address;
-            console.log(`To verify impl, run: npx hardhat verify --network Network --contract contracts/Router.sol:Router ${impl_addr}`);
+            console.log(`To verify impl, run: npx hardhat verify --network ${hre.network.name} --contract contracts/Router.sol:Router ${impl_addr}`);
         }
         await (await router.upgradeTo(impl_addr)).wait();
     });

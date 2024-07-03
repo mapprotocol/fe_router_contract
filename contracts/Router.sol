@@ -48,7 +48,7 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
 
     function setPool(address _pool) external onlyOwner {
         if(!_pool.isContract()) revert NOT_CONTRACT();
-        pool = IPool(pool);
+        pool = IPool(_pool);
         emit SetPool(_pool);
     }
     function setButterRouter(address _butterRouter) external onlyOwner {
