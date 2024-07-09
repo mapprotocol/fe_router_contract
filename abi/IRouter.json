@@ -178,6 +178,11 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      },
+      {
         "internalType": "bytes32",
         "name": "_orderId",
         "type": "bytes32"
@@ -196,11 +201,6 @@
         "internalType": "bytes",
         "name": "_to",
         "type": "bytes"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
       }
     ],
     "name": "onReceived",

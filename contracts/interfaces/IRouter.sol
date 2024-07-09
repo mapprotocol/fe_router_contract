@@ -20,5 +20,5 @@ interface IRouter {
         uint256 amount,
         address receiver
     ) external;
-    function onReceived(bytes32 _orderId,address _token,address _from,bytes calldata _to,uint256 _amount) external;
+    function onReceived(uint256 _amount,bytes32 _orderId,address _token,address _from,bytes calldata _to) external;
 }

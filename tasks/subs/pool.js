@@ -72,7 +72,6 @@ task("pool:updateSupportToken", "update support token")
         const deployer = accounts[0];
         console.log("deployer:", deployer.address);
         let pool = await ethers.getContractAt("Pool",taskArgs.pool,deployer);
-        console.log(pool)
         let tokenList = taskArgs.token.split(",");
         await (await pool.updateSupportTokens(tokenList,taskArgs.flag)).wait();
         
