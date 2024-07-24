@@ -153,9 +153,21 @@
       },
       {
         "indexed": false,
+        "internalType": "uint64",
+        "name": "_bridgeId",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_token",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_tochain",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -166,7 +178,7 @@
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "to",
+        "name": "_to",
         "type": "bytes"
       },
       {
@@ -260,6 +272,19 @@
       }
     ],
     "name": "SetPool",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "_poolId",
+        "type": "uint8"
+      }
+    ],
+    "name": "SetPoolId",
     "type": "event"
   },
   {
@@ -463,6 +488,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "nonce",
+    "outputs": [
+      {
+        "internalType": "uint56",
+        "name": "",
+        "type": "uint56"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -483,6 +521,11 @@
         "internalType": "address",
         "name": "_from",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tochain",
+        "type": "uint256"
       },
       {
         "internalType": "bytes",
@@ -549,6 +592,19 @@
   },
   {
     "inputs": [],
+    "name": "poolId",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "proxiableUUID",
     "outputs": [
       {
@@ -589,6 +645,19 @@
       }
     ],
     "name": "setPool",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "_poolId",
+        "type": "uint8"
+      }
+    ],
+    "name": "setPoolId",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

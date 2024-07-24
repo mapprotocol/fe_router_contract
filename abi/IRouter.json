@@ -72,9 +72,21 @@
       },
       {
         "indexed": false,
+        "internalType": "uint64",
+        "name": "_bridgeId",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_token",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_tochain",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -85,7 +97,7 @@
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "to",
+        "name": "_to",
         "type": "bytes"
       },
       {
@@ -196,6 +208,11 @@
         "internalType": "address",
         "name": "_from",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_tochain",
+        "type": "uint256"
       },
       {
         "internalType": "bytes",

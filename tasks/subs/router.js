@@ -1,6 +1,7 @@
 let {createFactory} = require("../../utils/create.js");
 
 task("router:deploy", "router deploy")
+    .addParam("id","pool id")
     .setAction(async (taskArgs, hre) => {
         const { deploy } = hre.deployments;
         const accounts = await ethers.getSigners();
@@ -14,7 +15,7 @@ task("router:deploy", "router deploy")
         });
         let impl_addr = impl.address;
         let Router = await ethers.getContractFactory("Router");
-        let data = await Router.interface.encodeFunctionData("initialize", [deployer.address]);
+        let data = await Router.interface.encodeFunctionData("initialize", [deployer.address,taskArgs.id]);
         let param = ethers.AbiCoder.defaultAbiCoder().encode(["address","bytes"], [impl_addr,data]);
         let proxy_salt = process.env.ROUTER_PROXY_SALT;
         let FeProxy = await ethers.getContractFactory("FeProxy");
@@ -74,6 +75,17 @@ task("router:setButterRouter", "set ButterRouter address")
         await (await router.setButterRouter(taskArgs.butter)).wait();
     });
 
+task("router:setPoolId", "set pool Id ")
+    .addParam("router","router address")
+    .addParam("id","pool id")
+    .setAction(async (taskArgs, hre) => {
+        const { deploy } = hre.deployments;
+        const accounts = await ethers.getSigners();
+        const deployer = accounts[0];
+        console.log("deployer:", deployer.address);
+        let router = await ethers.getContractAt("Router",taskArgs.router,deployer);
+        await (await router.setPoolId(taskArgs.id)).wait();
+    });
 
 task("router:updateKeepers", "updateKeepers")
     .addParam("router","router address")

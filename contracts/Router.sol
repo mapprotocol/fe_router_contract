@@ -24,7 +24,10 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
     address public butterRouter;
     mapping(address => bool) public keepers;
     mapping (bytes32 => bool) public delivered;
+    uint56 public nonce;
+    uint8 public poolId;
     event SetPool(address _pool);
+    event SetPoolId(uint8 _poolId);
     event SetButterRouter(address _butterRouter);
     event UpdateKeepers(address _keeper,bool _flag);
 
@@ -39,11 +42,13 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
          _disableInitializers(); 
     }
 
-    function initialize(address _owner) external initializer {
+    function initialize(address _owner,uint8 _poolId) external initializer {
          __Pausable_init();
         __ReentrancyGuard_init();
         __Ownable2Step_init_unchained();
         _transferOwnership(_owner);
+        require(_poolId != 0);
+        poolId = _poolId;
     } 
 
     function setPool(address _pool) external onlyOwner {
@@ -55,6 +60,12 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
         if(!_butterRouter.isContract()) revert NOT_CONTRACT();
         butterRouter = _butterRouter;
         emit SetButterRouter(_butterRouter);
+    }
+
+    function setPoolId(uint8 _poolId) external onlyOwner {
+       require(_poolId != 0);
+       poolId = _poolId;
+       emit SetPoolId(_poolId);
     }
     
     function updateKeepers(address _keeper,bool _flag) external onlyOwner {
@@ -98,11 +109,28 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
         emit Deliver(orderId,token,amount,receiver);
     }
 
-    function onReceived(uint256 _amount,bytes32 _orderId,address _token,address _from,bytes calldata _to) external override nonReentrant{
+    function onReceived(
+        uint256 _amount,
+        bytes32 _orderId,
+        address _token,
+        address _from,
+        uint256 _tochain,
+        bytes calldata _to
+    ) external override nonReentrant{
         assert(address(pool) != address(0));
+        uint64 bridgeId = (uint64(poolId) << 56) | ++nonce; 
         if(!pool.isSupport(_token)) revert NOT_SUPPORT(_token);
         IERC20Upgradeable(_token).safeTransferFrom(msg.sender,address(pool),_amount);
-        emit OnReceived(_orderId,_token,_from,_to,_amount,msg.sender);
+        emit OnReceived(
+            _orderId,
+            bridgeId,
+            _token,
+            _tochain,
+            _from,
+            _to,
+            _amount,
+            msg.sender
+        );
     }
 
    /** UUPS *********************************************************/
