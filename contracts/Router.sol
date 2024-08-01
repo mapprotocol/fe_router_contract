@@ -109,27 +109,37 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
         emit Deliver(orderId,token,amount,receiver);
     }
 
+
+    struct Temp {
+        uint256 amount;
+        uint64  bridgeId;
+        ReceiverParam param;
+    }
     function onReceived(
-        uint256 _amount,
-        bytes32 _orderId,
-        address _token,
-        address _from,
-        uint256 _tochain,
-        bytes calldata _to
-    ) external override nonReentrant{
+       uint256 _amount,
+       ReceiverParam calldata _param
+    ) external  override nonReentrant{
+        // Stack too deep.
+        Temp memory temp;
+        temp.param = _param;
+        temp.amount = _amount;
         assert(address(pool) != address(0));
-        uint64 bridgeId = (uint64(poolId) << 56) | ++nonce; 
-        if(!pool.isSupport(_token)) revert NOT_SUPPORT(_token);
-        IERC20Upgradeable(_token).safeTransferFrom(msg.sender,address(pool),_amount);
+        temp.bridgeId = (uint64(poolId) << 56) | ++nonce; 
+        if(!pool.isSupport(temp.param.chainPoolToken)) revert NOT_SUPPORT(temp.param.chainPoolToken);
+        IERC20Upgradeable(temp.param.chainPoolToken).safeTransferFrom(msg.sender,address(pool),temp.amount);
         emit OnReceived(
-            _orderId,
-            bridgeId,
-            _token,
-            _tochain,
-            _from,
-            _to,
-            _amount,
-            msg.sender
+            temp.param.orderId,
+            temp.bridgeId,
+            temp.param.srcChain,
+            temp.param.srcToken,
+            temp.param.inAmount,
+            temp.param.sender,
+            temp.param.chainPoolToken,
+            temp.amount,
+            temp.param.dstChain,
+            temp.param.dstToken,
+            temp.param.receiver,
+            temp.param.slippage
         );
     }
 
