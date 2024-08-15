@@ -16,8 +16,21 @@ interface IRouter {
         bytes   receiver,
         uint64 slippage
     );
-    event Deliver(bytes32 orderId,address token,uint256 amount,address receiver);
-    event DeliverAndSwap(bytes32 orderId,bytes32 bridgeId,address token,uint256 amount);
+
+    event Deliver(
+        bytes32 orderId,
+        address token,
+        uint256 amount,
+        address receiver
+    );
+
+    event DeliverAndSwap(
+        bytes32 orderId,
+        bytes32 bridgeId,
+        address token,
+        uint256 amount
+    );
+
     function deliverAndSwap(
         bytes32 orderId,
         address initiator,
@@ -27,12 +40,14 @@ interface IRouter {
         bytes calldata bridgeData,
         bytes calldata feeData
     ) external payable;
+
     function deliver(
         bytes32 orderId,
         address token,
         uint256 amount,
         address receiver
     ) external;
+
     struct ReceiverParam {
         bytes32 orderId;
         uint256 srcChain;
@@ -45,6 +60,7 @@ interface IRouter {
         bytes   receiver;
         uint64 slippage;
     }
+    
     function onReceived(
        uint256 _amount,
        ReceiverParam calldata _param
