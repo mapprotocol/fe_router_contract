@@ -11,6 +11,11 @@
   },
   {
     "inputs": [],
+    "name": "INVALID_FEE",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "KEEPER_ONLY",
     "type": "error"
   },
@@ -65,6 +70,31 @@
       }
     ],
     "name": "BeaconUpgraded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "orderId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      }
+    ],
+    "name": "CollectFee",
     "type": "event"
   },
   {
@@ -397,6 +427,16 @@
         "internalType": "address",
         "name": "receiver",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "feeReceiver",
+        "type": "address"
       }
     ],
     "name": "deliver",
@@ -440,6 +480,16 @@
         "internalType": "bytes",
         "name": "feeData",
         "type": "bytes"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "feeReceiver",
+        "type": "address"
       }
     ],
     "name": "deliverAndSwap",

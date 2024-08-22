@@ -30,12 +30,14 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
     event SetPoolId(uint8 _poolId);
     event SetButterRouter(address _butterRouter);
     event UpdateKeepers(address _keeper,bool _flag);
+    event CollectFee(bytes32 orderId, address token, uint256 fee);
 
     error NOT_CONTRACT();
     error ZERO_ADDRESS();
     error NOT_SUPPORT(address _token);
     error KEEPER_ONLY();
     error ALREADY_DELIVERED();
+    error INVALID_FEE();
     
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -81,32 +83,66 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
         uint256 amount,
         bytes calldata swapData,
         bytes calldata bridgeData,
-        bytes calldata feeData
+        bytes calldata feeData,
+        uint256 fee,
+        address feeReceiver
     ) external payable override nonReentrant {
         assert(address(pool) != address(0));
         if(!keepers[msg.sender]) revert KEEPER_ONLY();
         if(!pool.isSupport(token)) revert NOT_SUPPORT(token);
         if(delivered[orderId]) revert ALREADY_DELIVERED();
+        if(fee >= amount) revert INVALID_FEE();
         delivered[orderId] = true; 
-        pool.transferTo(IERC20Upgradeable(token),address(this),amount);
-        IERC20Upgradeable(token).safeIncreaseAllowance(butterRouter,amount);
-        bytes32 bridgeId = IButterRouterV3(butterRouter).swapAndBridge{value : msg.value}(orderId,initiator,token,amount,swapData,bridgeData,bytes(""),feeData);
-        emit DeliverAndSwap(orderId,bridgeId,token,amount);
+        uint256 afterFee = amount;
+        if((fee != 0) && (feeReceiver != address(0))) {
+           _collectFee(orderId, token, feeReceiver, fee);
+           afterFee = amount - fee;
+        }
+        pool.transferTo(IERC20Upgradeable(token), address(this), afterFee);
+        IERC20Upgradeable(token).safeIncreaseAllowance(butterRouter, afterFee);
+        bytes32 bridgeId = _swapAndbridge(orderId, initiator, token, afterFee, swapData, bridgeData, feeData);
+        emit DeliverAndSwap(orderId, bridgeId, token, amount);
+    }
+
+
+    function _swapAndbridge(
+       bytes32 orderId, 
+       address initiator,
+       address token,
+       uint256 amount,
+       bytes calldata swapData,
+       bytes calldata bridgeData,
+       bytes calldata feeData
+    ) private returns(bytes32 bridgeId){
+        return IButterRouterV3(butterRouter).swapAndBridge{value : msg.value}(orderId,initiator,token,amount,swapData,bridgeData,bytes(""),feeData);
     }
 
     function deliver(
         bytes32 orderId,
         address token,
         uint256 amount,
-        address receiver
+        address receiver,
+        uint256 fee,
+        address feeReceiver
     ) external override nonReentrant{
         assert(address(pool) != address(0));
         if(!keepers[msg.sender]) revert KEEPER_ONLY();
         if(!pool.isSupport(token)) revert NOT_SUPPORT(token);
         if(delivered[orderId]) revert ALREADY_DELIVERED();
+        if(fee >= amount) revert INVALID_FEE();
         delivered[orderId] = true; 
-        pool.transferTo(IERC20Upgradeable(token),receiver,amount);
-        emit Deliver(orderId,token,amount,receiver);
+        uint256 afterFee = amount;
+        if((fee != 0) && (feeReceiver != address(0))) {
+           _collectFee(orderId, token, feeReceiver, fee);
+           afterFee = amount - fee;
+        }
+        pool.transferTo(IERC20Upgradeable(token), receiver, afterFee);
+        emit Deliver(orderId, token, amount, receiver);
+    }
+
+    function _collectFee(bytes32 _orderId, address _token, address _feeReceiver, uint256 _fee) private {
+       pool.transferTo(IERC20Upgradeable(_token), _feeReceiver, _fee);
+       emit CollectFee(_orderId, _token, _fee);
     }
 
 

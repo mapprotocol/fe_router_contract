@@ -161,6 +161,16 @@
         "internalType": "address",
         "name": "receiver",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "feeReceiver",
+        "type": "address"
       }
     ],
     "name": "deliver",
@@ -204,6 +214,16 @@
         "internalType": "bytes",
         "name": "feeData",
         "type": "bytes"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "feeReceiver",
+        "type": "address"
       }
     ],
     "name": "deliverAndSwap",

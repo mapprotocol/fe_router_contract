@@ -38,14 +38,18 @@ interface IRouter {
         uint256 amount,
         bytes calldata swapData,
         bytes calldata bridgeData,
-        bytes calldata feeData
+        bytes calldata feeData,
+        uint256 fee,
+        address feeReceiver
     ) external payable;
 
     function deliver(
         bytes32 orderId,
         address token,
         uint256 amount,
-        address receiver
+        address receiver,
+        uint256 fee,
+        address feeReceiver
     ) external;
 
     struct ReceiverParam {
