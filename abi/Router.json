@@ -37,6 +37,11 @@
   },
   {
     "inputs": [],
+    "name": "ONLY_BUTTER",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ZERO_ADDRESS",
     "type": "error"
   },

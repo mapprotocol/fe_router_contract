@@ -38,6 +38,7 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
     error KEEPER_ONLY();
     error ALREADY_DELIVERED();
     error INVALID_FEE();
+    error ONLY_BUTTER();
     
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -161,6 +162,7 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
         temp.amount = _amount;
         assert(address(pool) != address(0));
         temp.bridgeId = (uint64(poolId) << 56) | ++nonce; 
+        if(msg.sender != butterRouter) revert ONLY_BUTTER();
         if(!pool.isSupport(temp.param.chainPoolToken)) revert NOT_SUPPORT(temp.param.chainPoolToken);
         IERC20Upgradeable(temp.param.chainPoolToken).safeTransferFrom(msg.sender,address(pool),temp.amount);
         emit OnReceived(
