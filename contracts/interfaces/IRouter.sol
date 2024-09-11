@@ -31,6 +31,33 @@ interface IRouter {
         uint256 amount
     );
 
+    event DeliverAndSwap(
+        uint256 srcChain,
+        uint256 dstChain,
+        address receiver,
+        bytes32 orderId,
+        bytes32 bridgeId,
+        bytes from,
+        address srcToken,
+        uint256 srcAmount,
+        address dstToken
+    );
+
+    struct DeliverParam{
+        bytes32 orderId;
+        address receiver;
+        address token;
+        uint256 amount;
+        uint256 fromChain;
+        uint256 toChain;
+        uint256 fee;
+        address feeReceiver;
+        bytes  from;
+        bytes  butterData;
+    }
+
+    function deliverAndSwap(DeliverParam memory param) external payable;
+
     function deliverAndSwap(
         bytes32 orderId,
         address initiator,

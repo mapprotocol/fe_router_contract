@@ -105,6 +105,60 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
         emit DeliverAndSwap(orderId, bridgeId, token, amount);
     }
 
+    function deliverAndSwap(
+        DeliverParam memory param
+    ) external payable override nonReentrant {
+        assert(address(pool) != address(0));
+        if(!keepers[msg.sender]) revert KEEPER_ONLY();
+        if(!pool.isSupport(param.token)) revert NOT_SUPPORT(param.token);
+        if(delivered[param.orderId]) revert ALREADY_DELIVERED();
+        if(param.fee >= param.amount) revert INVALID_FEE();
+        delivered[param.orderId] = true; 
+        uint256 afterFee;
+        if((param.fee != 0) && (param.feeReceiver != address(0))) {
+            _collectFee(param.orderId, param.token, param.feeReceiver, param.fee);
+            afterFee = param.amount - param.fee;
+        }
+        address dstToken;
+        bytes32 bridgeId;
+        if(param.butterData.length == 0){
+            param.toChain = block.chainid;
+            dstToken = param.token;
+            bridgeId = 0x0000000000000000000000000000000000000000000000000000000000000001;
+            pool.transferTo(IERC20Upgradeable(param.token), param.receiver, afterFee);
+        } else {
+            pool.transferTo(IERC20Upgradeable(param.token), address(this), afterFee);
+            IERC20Upgradeable(param.token).safeIncreaseAllowance(butterRouter, afterFee);
+            (bridgeId, dstToken) = _swapAndbridge(param.orderId, param.token, afterFee, param.butterData);
+        }
+        emit DeliverAndSwap(
+            param.fromChain, 
+            param.toChain, 
+            param.receiver, 
+            param.orderId, 
+            bridgeId, 
+            param.from, 
+            param.token, 
+            param.amount, 
+            dstToken
+        );
+
+    }
+
+
+    function _swapAndbridge(
+       bytes32 orderId, 
+       address token,
+       uint256 amount,
+       bytes memory butterData
+    ) private returns(bytes32 bridgeId, address dstToken){
+        address initiator;
+        bytes memory swapData;
+        bytes memory bridgeData;
+        bytes memory feeData;
+        (initiator, dstToken, swapData, bridgeData, feeData) = abi.decode(butterData, (address, address, bytes, bytes, bytes));
+        bridgeId = IButterRouterV3(butterRouter).swapAndBridge{value : msg.value}(orderId,initiator,token,amount,swapData,bridgeData,bytes(""),feeData);
+    }
 
     function _swapAndbridge(
        bytes32 orderId, 
