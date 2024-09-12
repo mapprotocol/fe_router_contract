@@ -114,7 +114,7 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
         if(delivered[param.orderId]) revert ALREADY_DELIVERED();
         if(param.fee >= param.amount) revert INVALID_FEE();
         delivered[param.orderId] = true; 
-        uint256 afterFee;
+        uint256 afterFee = param.amount;
         if((param.fee != 0) && (param.feeReceiver != address(0))) {
             _collectFee(param.orderId, param.token, param.feeReceiver, param.fee);
             afterFee = param.amount - param.fee;
