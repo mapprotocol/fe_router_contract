@@ -424,7 +424,7 @@
     ],
     "name": "onReceived",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   }
 ]

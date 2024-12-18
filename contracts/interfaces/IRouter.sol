@@ -95,5 +95,5 @@ interface IRouter {
     function onReceived(
        uint256 _amount,
        ReceiverParam calldata _param
-    ) external;
+    ) external payable;
 }

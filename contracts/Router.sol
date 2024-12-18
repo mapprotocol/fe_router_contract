@@ -209,7 +209,7 @@ contract Router is UUPSUpgradeable,PausableUpgradeable,ReentrancyGuardUpgradeabl
     function onReceived(
        uint256 _amount,
        ReceiverParam calldata _param
-    ) external  override nonReentrant{
+    ) external payable override nonReentrant{
         // Stack too deep.
         Temp memory temp;
         temp.param = _param;
