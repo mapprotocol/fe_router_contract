@@ -4,11 +4,9 @@ task("ETHChainPoolRouter: deploy", "router deploy")
     .addParam("id","pool id")
     .addParam("butter","pool address")
     .setAction(async (taskArgs, hre) => {
-        const { deploy } = hre.deployments;
         const accounts = await ethers.getSigners();
         const deployer = accounts[0];
         console.log("deployer:", deployer.address);
-
         let ETHChainPoolRouter = await ethers.getContractFactory("ETHChainPoolRouter");
         let param = ethers.AbiCoder.defaultAbiCoder().encode(["address","address","uint8"], [deployer.address, taskArgs.butter, taskArgs.id]);
         let proxy_salt = process.env.ROUTER_PROXY_SALT;
@@ -21,7 +19,6 @@ task("ETHChainPoolRouter:setButterRouter", "set ButterRouter address")
     .addParam("router","router address")
     .addParam("butter","pool address")
     .setAction(async (taskArgs, hre) => {
-        const { deploy } = hre.deployments;
         const accounts = await ethers.getSigners();
         const deployer = accounts[0];
         console.log("deployer:", deployer.address);
@@ -33,7 +30,6 @@ task("ETHChainPoolRouter:setPoolId", "set pool Id ")
     .addParam("router","router address")
     .addParam("id","pool id")
     .setAction(async (taskArgs, hre) => {
-        const { deploy } = hre.deployments;
         const accounts = await ethers.getSigners();
         const deployer = accounts[0];
         console.log("deployer:", deployer.address);
@@ -46,7 +42,6 @@ task("ETHChainPoolRouter:updateKeepers", "updateKeepers")
     .addParam("keeper","pool address")
     .addParam("flag","pool address")
     .setAction(async (taskArgs, hre) => {
-        const { deploy } = hre.deployments;
         const accounts = await ethers.getSigners();
         const deployer = accounts[0];
         console.log("deployer:", deployer.address);
@@ -54,14 +49,13 @@ task("ETHChainPoolRouter:updateKeepers", "updateKeepers")
         await (await router.updateKeepers(taskArgs.keeper, taskArgs.flag)).wait();
     });
 
-task("register:grantRole", "set token outFee")
+task("ETHChainPoolRouter:grantRole", "set token outFee")
     .addParam("router","router address")
     .addParam("role", "role address")
     .addParam("account", "account address")
     .addOptionalParam("grant", "grant or revoke", true, types.boolean)
     .setAction(async (taskArgs, hre) => {
 
-    const { deploy } = hre.deployments;
     const accounts = await ethers.getSigners();
     const deployer = accounts[0];
     console.log("deployer:", deployer.address);
@@ -70,6 +64,8 @@ task("register:grantRole", "set token outFee")
     let role;
     if (taskArgs.role === "manage" || taskArgs.role === "manager") {
         role = ethers.keccak256(ethers.toUtf8Bytes("MANAGER_ROLE"));
+    } else if (taskArgs.role === "keeper"){
+        role = ethers.keccak256(ethers.toUtf8Bytes("KEEPER_ROLE"));
     } else {
         role = ethers.ZeroHash;
     }

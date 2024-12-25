@@ -1,24 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IButterRouterV3.sol";
 import "./interfaces/IChainPoolRouter.sol";
 
-contract ETHChainPoolRouter is
-    AccessControlEnumerable,
-    ReentrancyGuard,
+contract ChainPoolRouter is
+    UUPSUpgradeable,
+    AccessControlEnumerableUpgradeable,
+    ReentrancyGuardUpgradeable,
     IChainPoolRouter
 {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
+    bytes32 public constant UPGRADE_ROLE = keccak256("UPGRADE_ROLE");
 
     uint56 public nonce;
     uint8 public poolId;
     address public butterRouter;
-    uint256 public delivered;
+    mapping (bytes32 => bool) public delivered;
 
     // feeReceiver => token => amount
     mapping(address => mapping(address => uint256)) public fees;
@@ -38,11 +41,19 @@ contract ETHChainPoolRouter is
     error TOKEN_TRANSFER_FAILED();
     error RECERVER_TOO_LOW();
 
-    constructor(address _admin,address _butterRouter, uint8 _poolId) {
+
+    constructor() {
+         _disableInitializers(); 
+    }
+
+    function initialize(address _admin, address _butterRouter, uint8 _poolId) external initializer {
         if (_butterRouter.code.length == 0) revert NOT_CONTRACT();
         poolId = _poolId;
         butterRouter = _butterRouter;
+        __ReentrancyGuard_init();
+        __AccessControlEnumerable_init();
         _grantRole(MANAGER_ROLE, _admin);
+        _grantRole(UPGRADE_ROLE, _admin);
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
     }
 
@@ -77,11 +88,10 @@ contract ETHChainPoolRouter is
 
     function deliverAndSwap(
         DeliverParam memory param
-    ) external payable override nonReentrant onlyRole(MANAGER_ROLE){
+    ) external payable override nonReentrant onlyRole(KEEPER_ROLE){
         if (param.fee >= param.amount) revert INVALID_FEE();
-        uint64 orderId_64 = uint64(uint256(param.orderId));
-        if(isDelivered(orderId_64)) revert ALREADY_DELIVERED();
-        delivered = (delivered << 64) | uint256(orderId_64);
+        if(delivered[param.orderId]) revert ALREADY_DELIVERED();
+        delivered[param.orderId] = true;
         uint256 fee = _collectFee(
                             param.orderId,
                             param.token,
@@ -235,12 +245,11 @@ contract ETHChainPoolRouter is
         }
     }
 
-    function isDelivered(uint64 orderId) public view returns(bool) {
-        uint256 _delivered = delivered;
-        for (uint i = 0; i < 4; i++) {
-            if(orderId == uint64(_delivered >> ( 64 * i))) return true;  
-        }
-        return false;
+    /** UUPS *********************************************************/
+    function _authorizeUpgrade(address) internal view override onlyRole(UPGRADE_ROLE) {}
+
+    function getImplementation() external view returns (address) {
+        return _getImplementation();
     }
 
 }
