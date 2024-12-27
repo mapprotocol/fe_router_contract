@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+// import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IButterRouterV3.sol";
@@ -11,7 +11,6 @@ import "./interfaces/IChainPoolRouter.sol";
 contract ChainPoolRouter is
     UUPSUpgradeable,
     AccessControlEnumerableUpgradeable,
-    ReentrancyGuardUpgradeable,
     IChainPoolRouter
 {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
@@ -54,7 +53,6 @@ contract ChainPoolRouter is
         if (_butterRouter.code.length == 0) revert NOT_CONTRACT();
         poolId = _poolId;
         butterRouter = _butterRouter;
-        __ReentrancyGuard_init();
         __AccessControlEnumerable_init();
         _grantRole(MANAGER_ROLE, _admin);
         _grantRole(UPGRADE_ROLE, _admin);
@@ -75,8 +73,8 @@ contract ChainPoolRouter is
         emit SetPoolId(_poolId);
     }
 
-    function withdrawFee(address token) external {
-        address receiver = msg.sender;
+    function withdrawFee(address token, address receiver) external onlyRole(MANAGER_ROLE){
+        if(receiver == address(0)) revert ZERO_ADDRESS();
         uint256 fee = fees[receiver][token];
         fees[receiver][token] = 0;
         require(fee != 0);
@@ -101,7 +99,7 @@ contract ChainPoolRouter is
 
     function deliverAndSwap(
         DeliverParam memory param
-    ) external payable override nonReentrant onlyRole(KEEPER_ROLE){
+    ) external payable override onlyRole(KEEPER_ROLE){
         _checkSupportToken(param.token);
         if (param.fee >= param.amount) revert INVALID_FEE();
         if(delivered[param.orderId]) revert ALREADY_DELIVERED();

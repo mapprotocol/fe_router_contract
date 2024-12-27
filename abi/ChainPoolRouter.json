@@ -123,6 +123,18 @@
       },
       {
         "indexed": false,
+        "internalType": "bytes32",
+        "name": "orderId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "bridgeId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "srcChain",
         "type": "uint256"
@@ -138,18 +150,6 @@
         "internalType": "address",
         "name": "receiver",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "orderId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "bridgeId",
-        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -1069,6 +1069,11 @@
       {
         "internalType": "address",
         "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "receiver",
         "type": "address"
       }
     ],

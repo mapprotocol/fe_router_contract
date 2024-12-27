@@ -2,14 +2,13 @@
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IButterRouterV3.sol";
 import "./interfaces/IChainPoolRouter.sol";
 
 contract ETHChainPoolRouter is
     AccessControlEnumerable,
-    ReentrancyGuard,
     IChainPoolRouter
 {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
@@ -66,8 +65,8 @@ contract ETHChainPoolRouter is
         emit SetPoolId(_poolId);
     }
 
-    function withdrawFee(address token) external {
-        address receiver = msg.sender;
+    function withdrawFee(address token, address receiver) external onlyRole(MANAGER_ROLE){
+        if(receiver == address(0)) revert ZERO_ADDRESS();
         uint256 fee = fees[receiver][token];
         fees[receiver][token] = 0;
         require(fee != 0);
@@ -92,7 +91,7 @@ contract ETHChainPoolRouter is
 
     function deliverAndSwap(
         DeliverParam memory param
-    ) external payable override nonReentrant onlyRole(MANAGER_ROLE){
+    ) external payable override onlyRole(MANAGER_ROLE){
         _checkSupportToken(param.token);
         if (param.fee >= param.amount) revert INVALID_FEE();
         uint64 orderId_64 = uint64(uint256(param.orderId));
