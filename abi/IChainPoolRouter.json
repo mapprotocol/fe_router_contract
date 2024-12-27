@@ -83,9 +83,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint64",
+        "internalType": "bytes32",
         "name": "bridgeId",
-        "type": "uint64"
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -237,7 +237,7 @@
           },
           {
             "internalType": "bytes32",
-            "name": "orderId",
+            "name": "bridgeId",
             "type": "bytes32"
           },
           {

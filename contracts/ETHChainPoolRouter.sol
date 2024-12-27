@@ -20,11 +20,14 @@ contract ETHChainPoolRouter is
     address public butterRouter;
     uint256 public delivered;
 
-    // feeReceiver => token => amount
+    mapping(address => bool) public supportTokens;
+    //feeReceiver => token => amount
     mapping(address => mapping(address => uint256)) public fees;
+
 
     event SetPoolId(uint8 _poolId);
     event SetButterRouter(address _butterRouter);
+    event UpdateSupportTokens(address _token,bool _flag);
     event CollectFee(bytes32 orderId, address token, uint256 fee);
     event WithdrawFee(address receiver, address token, uint256 amount);
     event Withdraw(address _token,address _receiver,uint256 _amount);
@@ -34,9 +37,12 @@ contract ETHChainPoolRouter is
     error ALREADY_DELIVERED();
     error INVALID_FEE();
     error ONLY_BUTTER();
+    error NOT_SUPPORT(address _token);
     error NATIVE_TRANSFER_FAILED();
     error TOKEN_TRANSFER_FAILED();
     error RECERVER_TOO_LOW();
+
+    receive() payable external {}
 
     constructor(address _admin,address _butterRouter, uint8 _poolId) {
         if (_butterRouter.code.length == 0) revert NOT_CONTRACT();
@@ -75,9 +81,19 @@ contract ETHChainPoolRouter is
          emit Withdraw(_token,_recerver,_amount);
     }
 
+    function updateSupportTokens(address[] calldata _tokens, bool _flag) external onlyRole(MANAGER_ROLE) {
+        uint256 len = _tokens.length;
+        for (uint i = 0; i < len; i++) {
+             if(_tokens[i].code.length == 0) revert NOT_CONTRACT();
+             supportTokens[_tokens[i]] = _flag;
+             emit UpdateSupportTokens(_tokens[i], _flag);
+        }
+    }
+
     function deliverAndSwap(
         DeliverParam memory param
     ) external payable override nonReentrant onlyRole(MANAGER_ROLE){
+        _checkSupportToken(param.token);
         if (param.fee >= param.amount) revert INVALID_FEE();
         uint64 orderId_64 = uint64(uint256(param.orderId));
         if(isDelivered(orderId_64)) revert ALREADY_DELIVERED();
@@ -97,7 +113,7 @@ contract ETHChainPoolRouter is
             bridgeId = 0x0000000000000000000000000000000000000000000000000000000000000001;
             _transferOut(param.token, param.receiver, afterFee);
         } else {
-            (bridgeId, dstToken) = _swapAndbridge(
+            (bridgeId, dstToken) = _callButter(
                 param.orderId,
                 param.token,
                 afterFee,
@@ -106,11 +122,11 @@ contract ETHChainPoolRouter is
         }
         emit DeliverAndSwap(
             param.referrer,
+            param.orderId,
+            bridgeId,
             param.fromChain,
             param.toChain,
             param.receiver,
-            param.orderId,
-            bridgeId,
             param.from,
             param.token,
             param.amount,
@@ -118,15 +134,16 @@ contract ETHChainPoolRouter is
         );
     }
 
-    function _swapAndbridge(
+    function _callButter(
         bytes32 orderId,
         address token,
         uint256 amount,
         bytes memory butterData
     ) private returns (bytes32 bridgeId, address dstToken) {
         address initiator;
+        bool bridge;
         bytes memory swapData;
-        bytes memory bridgeData;
+        bytes memory bridgeDataOrCallData;
         bytes memory feeData;
         uint256 value;
         if (token == address(0)) {
@@ -134,11 +151,29 @@ contract ETHChainPoolRouter is
         } else {
             IERC20(token).approve(butterRouter, amount);
         }
-        (initiator, dstToken, swapData, bridgeData, feeData) = abi.decode(
+        (bridge, initiator, dstToken, swapData, bridgeDataOrCallData, feeData) = abi.decode(
             butterData,
-            (address, address, bytes, bytes, bytes)
+            (bool, address, address, bytes, bytes, bytes)
         );
-        bridgeId = IButterRouterV3(butterRouter).swapAndBridge{value: amount}(
+        if(bridge){
+            bridgeId = _swapAndBridge(orderId, initiator, token, amount, value, swapData, bridgeDataOrCallData, feeData);
+        } else {
+            bridgeId = _swapAndCall(orderId, initiator, token, amount, value, swapData, bridgeDataOrCallData, feeData);
+        }
+
+    }
+
+    function _swapAndBridge(
+        bytes32 orderId,
+        address initiator,
+        address token,
+        uint256 amount,
+        uint256 value,
+        bytes memory swapData,
+        bytes memory bridgeData,
+        bytes memory feeData
+    ) private returns (bytes32 bridgeId) {
+        bridgeId = IButterRouterV3(butterRouter).swapAndBridge{value: value}(
             orderId,
             initiator,
             token,
@@ -150,27 +185,50 @@ contract ETHChainPoolRouter is
         );
     }
 
+    function _swapAndCall(
+        bytes32 orderId,
+        address initiator,
+        address token,
+        uint256 amount,
+        uint256 value,
+        bytes memory swapData,
+        bytes memory callbackData,
+        bytes memory feeData
+    ) private returns (bytes32 bridgeId) {
+        bridgeId = 0x0000000000000000000000000000000000000000000000000000000000000002;
+        IButterRouterV3(butterRouter).swapAndCall{value: value}(
+            orderId,
+            initiator,
+            token,
+            amount,
+            swapData,
+            callbackData,
+            bytes(""),
+            feeData
+        );
+    }
+
     struct Temp {
         uint256 amount;
-        uint64 bridgeId;
+        bytes32 orderId;
         ReceiverParam param;
     }
 
     function onReceived(
         uint256 _amount,
         ReceiverParam calldata _param
-    ) external payable override nonReentrant {
+    ) external payable override {
         // Stack too deep.
         Temp memory temp;
         temp.param = _param;
         temp.amount = _amount;
-
-        temp.bridgeId = (uint64(poolId) << 56) | ++nonce;
+        _checkSupportToken(temp.param.chainPoolToken);
+        temp.orderId = bytes32(uint256((uint64(poolId) << 56) | ++nonce));
         _transferIn(temp.param.chainPoolToken, msg.sender, temp.amount);
         emit OnReceived(
             temp.param.referrer,
-            temp.param.orderId,
-            temp.bridgeId,
+            temp.orderId,
+            temp.param.bridgeId,
             temp.param.srcChain,
             temp.param.srcToken,
             temp.param.inAmount,
@@ -182,6 +240,10 @@ contract ETHChainPoolRouter is
             temp.param.receiver,
             temp.param.slippage
         );
+    }
+
+    function _checkSupportToken(address token) private view {
+        if(!supportTokens[token]) revert NOT_SUPPORT(token);
     }
 
     function _transferIn(

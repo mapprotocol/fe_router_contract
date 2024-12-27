@@ -75,6 +75,19 @@ task("ChainPoolRouter:setPoolId", "set pool Id ")
         await (await router.setPoolId(taskArgs.id)).wait();
     });
 
+task("ChainPoolRouter:updateSupportToken", "update support token")
+    .addParam("router","router address")
+    .addParam("token","tokens addresses")
+    .addParam("flag","support or not")
+    .setAction(async (taskArgs, hre) => {
+        const { deploy } = hre.deployments;
+        const accounts = await ethers.getSigners();
+        const deployer = accounts[0];
+        console.log("deployer:", deployer.address);
+        let router = await ethers.getContractAt("ChainPoolRouter", taskArgs.router, deployer);
+        let tokenList = taskArgs.token.split(",");
+        await (await router.updateSupportTokens(tokenList, taskArgs.flag)).wait();
+    });
 
 task("ChainPoolRouter:grantRole", "set token outFee")
     .addParam("router","router address")

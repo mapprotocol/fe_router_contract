@@ -5,7 +5,7 @@ interface IChainPoolRouter {
     event OnReceived(
         address referrer,
         bytes32 orderId,
-        uint64  bridgeId,
+        bytes32 bridgeId,
         uint256 srcChain,
         bytes   srcToken,
         string  inAmount,
@@ -20,11 +20,11 @@ interface IChainPoolRouter {
 
     event DeliverAndSwap(
         address referrer,
+        bytes32 orderId,
+        bytes32 bridgeId,
         uint256 srcChain,
         uint256 dstChain,
         address receiver,
-        bytes32 orderId,
-        bytes32 bridgeId,
         bytes from,
         address srcToken,
         uint256 srcAmount,
@@ -49,7 +49,7 @@ interface IChainPoolRouter {
 
     struct ReceiverParam {
         address referrer;
-        bytes32 orderId;
+        bytes32 bridgeId;
         uint256 srcChain;
         bytes   srcToken;
         bytes   sender;

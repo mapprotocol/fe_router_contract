@@ -41,6 +41,17 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      }
+    ],
+    "name": "NOT_SUPPORT",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "ONLY_BUTTER",
     "type": "error"
@@ -169,9 +180,9 @@
       },
       {
         "indexed": false,
-        "internalType": "uint64",
+        "internalType": "bytes32",
         "name": "bridgeId",
-        "type": "uint64"
+        "type": "bytes32"
       },
       {
         "indexed": false,
@@ -336,6 +347,25 @@
       }
     ],
     "name": "SetPoolId",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "_flag",
+        "type": "bool"
+      }
+    ],
+    "name": "UpdateSupportTokens",
     "type": "event"
   },
   {
@@ -699,7 +729,7 @@
           },
           {
             "internalType": "bytes32",
-            "name": "orderId",
+            "name": "bridgeId",
             "type": "bytes32"
           },
           {
@@ -836,6 +866,25 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "supportTokens",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes4",
         "name": "interfaceId",
         "type": "bytes4"
@@ -850,6 +899,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "_tokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bool",
+        "name": "_flag",
+        "type": "bool"
+      }
+    ],
+    "name": "updateSupportTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -887,5 +954,9 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
